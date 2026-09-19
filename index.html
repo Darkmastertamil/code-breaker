@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>CODE BREAKER ⚡</title>
+  <meta name="description" content="A turn-based 1-vs-1 private room code deduction game where two players secretly choose 4 unique digits and race to crack each other's secret code.">
+  <meta property="og:title" content="CODE BREAKER ⚡">
+  <meta property="og:description" content="A turn-based 1-vs-1 private room code deduction game where two players secretly choose 4 unique digits and race to crack each other's secret code.">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="stylesheet" href="/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div id="app-root" class="app-container">
+
+    <!-- TOP GLOBAL BAR -->
+    <header class="top-nav" id="top-nav">
+      <div class="brand">
+        <span class="brand-logo">⚡</span>
+        <span class="brand-name">CODE BREAKER</span>
+      </div>
+      <div class="nav-status">
+        <div id="connection-indicator" class="status-pill status-connected">
+          <span class="status-dot"></span>
+          <span id="connection-text">ONLINE</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+    <!-- MAIN VIEWS WRAPPER -->
+    <main class="main-content">
+
+      <!-- ================================================================ -->
+      <!-- 1. HOME SCREEN                                                   -->
+      <!-- ================================================================ -->
+      <section id="screen-home" class="game-screen active-screen">
+        <div class="screen-card hero-card">
+          <div class="hero-badge">1-vs-1 PRIVATE MULTIPLAYER</div>
+          <h1 class="hero-title">CODE BREAKER <span class="accent-lightning">⚡</span></h1>
+          <p class="hero-tagline">Crack. Think. Win.</p>
+          <p class="hero-description">
+            Choose a secret 4-digit code. Deduce your opponent's code before they crack yours in a best-of-3 duel!
+          </p>
+
+          <div class="action-stack">
+            <button id="btn-home-create" class="btn btn-primary btn-large">
+              <span class="btn-icon">➕</span> CREATE ROOM
+            </button>
+            <button id="btn-home-join" class="btn btn-secondary btn-large">
+              <span class="btn-icon">🚪</span> JOIN ROOM
+            </button>
+          </div>
+
+          <!-- Quick rules summary -->
+          <div class="rules-box">
+            <div class="rules-header">HOW TO PLAY</div>
+            <ul class="rules-list">
+              <li><span class="rule-bullet">1.</span> Both players secretly pick 4 unique digits (0–9).</li>
+              <li><span class="rule-bullet">2.</span> Take turns guessing the opponent's secret code.</li>
+              <li><span class="rule-bullet">3.</span> Decode feedback after each guess:</li>
+            </ul>
+            <div class="legend-grid">
+              <div class="legend-item">
+                <span class="feedback-badge fb-correct">🟢</span>
+                <span>Correct digit &amp; spot</span>
+              </div>
+              <div class="legend-item">
+                <span class="feedback-badge fb-wrong-pos">🟡</span>
+                <span>In code, wrong spot</span>
+              </div>
+              <div class="legend-item">
+                <span class="feedback-badge fb-not-found">❌</span>
+                <span>Not in code</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================================ -->
+      <!-- 2. CREATE ROOM SCREEN                                            -->
+      <!-- ================================================================ -->
+      <section id="screen-create" class="game-screen">
+        <div class="screen-card">
+          <div class="card-eyebrow">HOST A PRIVATE MATCH</div>
+          <h2 class="card-title">Create Private Room</h2>
+          <p class="card-subtitle">Share this room code with Player 2 to begin the match.</p>
+
+          <div class="room-code-display-card">
+            <div class="code-label">ROOM CODE</div>
+            <div id="created-room-code" class="code-value">-----</div>
+            <div class="code-actions">
+              <button id="btn-copy-code" class="btn btn-accent btn-sm">
+                📋 COPY CODE
+              </button>
+            </div>
+          </div>
+
+          <div class="waiting-radar">
+            <div class="radar-ping"></div>
+            <div class="radar-icon">📡</div>
+            <div class="radar-text" id="create-status-text">WAITING FOR PLAYER 2...</div>
+          </div>
+
+          <div class="lobby-players-status">
+            <div class="lobby-player-row">
+              <span class="lobby-dot dot-green"></span>
+              <span class="lobby-name">PLAYER 1 (You)</span>
+              <span class="lobby-tag tag-ready">READY</span>
+            </div>
+            <div class="lobby-player-row">
+              <span class="lobby-dot dot-amber"></span>
+              <span class="lobby-name">PLAYER 2</span>
+              <span class="lobby-tag tag-waiting">WAITING...</span>
+            </div>
+          </div>
+
+          <div class="card-footer-actions">
+            <button id="btn-cancel-create" class="btn btn-ghost">
+              ← Back to Home
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================================ -->
+      <!-- 3. JOIN ROOM SCREEN                                              -->
+      <!-- ================================================================ -->
+      <section id="screen-join" class="game-screen">
+        <div class="screen-card">
+          <div class="card-eyebrow">ENTER THE DUEL</div>
+          <h2 class="card-title">Join Private Room</h2>
+          <p class="card-subtitle">Enter the 5-character code given by your opponent.</p>
+
+          <div class="join-form">
+            <div class="input-group">
+              <label for="input-room-code" class="input-label">ROOM CODE</label>
+              <input
+                type="text"
+                id="input-room-code"
+                class="room-code-input"
+                placeholder="e.g. X7K92"
+                maxlength="5"
+                autocomplete="off"
+                autocapitalize="characters"
+                spellcheck="false"
+              />
+            </div>
+
+            <div id="join-error-msg" class="inline-error hidden"></div>
+
+            <button id="btn-submit-join" class="btn btn-primary btn-large">
+              JOIN ROOM
+            </button>
+          </div>
+
+          <div class="card-footer-actions">
+            <button id="btn-cancel-join" class="btn btn-ghost">
+              ← Back to Home
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================================ -->
+      <!-- 4. WAITING / LOBBY SCREEN                                        -->
+      <!-- ================================================================ -->
+      <section id="screen-waiting" class="game-screen">
+        <div class="screen-card">
+          <div class="card-eyebrow">ROOM LOBBY</div>
+          <h2 class="card-title">Room <span id="lobby-room-code" class="accent-cyan">-----</span></h2>
+          <p class="card-subtitle">Connecting players and synchronizing match environment...</p>
+
+          <div class="lobby-roster">
+            <div class="roster-card" id="roster-p1">
+              <div class="roster-avatar">P1</div>
+              <div class="roster-info">
+                <div class="roster-name">PLAYER 1</div>
+                <div class="roster-status status-online">● Connected</div>
+              </div>
+            </div>
+
+            <div class="roster-vs">VS</div>
+
+            <div class="roster-card" id="roster-p2">
+              <div class="roster-avatar">P2</div>
+              <div class="roster-info">
+                <div class="roster-name">PLAYER 2</div>
+                <div class="roster-status" id="roster-p2-status">○ Waiting...</div>
+              </div>
+            </div>
+          </div>
+
+          <div id="lobby-countdown" class="lobby-countdown hidden">
+            Game starting in <span id="countdown-num">3</span>...
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================================ -->
+      <!-- 5. SECRET CODE CREATION SCREEN                                   -->
+      <!-- ================================================================ -->
+      <section id="screen-secret" class="game-screen">
+        <div class="screen-card">
+          <div class="card-eyebrow">ROUND <span id="secret-round-num">1</span> SETUP</div>
+          <h2 class="card-title">Create Your Secret Code</h2>
+          <p class="card-subtitle">Choose 4 unique digits (0–9). Your opponent must deduce this!</p>
+
+          <!-- 4 Secret Digit Boxes -->
+          <div class="digit-boxes-row" id="secret-boxes-row">
+            <div class="digit-box" data-index="0" id="secret-box-0">-</div>
+            <div class="digit-box" data-index="1" id="secret-box-1">-</div>
+            <div class="digit-box" data-index="2" id="secret-box-2">-</div>
+            <div class="digit-box" data-index="3" id="secret-box-3">-</div>
+          </div>
+
+          <div id="secret-feedback-hint" class="code-hint">
+            Must contain 4 distinct digits (no duplicates)
+          </div>
+
+          <!-- Virtual Keypad for smooth mobile & desktop play -->
+          <div class="keypad" id="secret-keypad">
+            <button class="keypad-btn" data-key="1">1</button>
+            <button class="keypad-btn" data-key="2">2</button>
+            <button class="keypad-btn" data-key="3">3</button>
+            <button class="keypad-btn" data-key="4">4</button>
+            <button class="keypad-btn" data-key="5">5</button>
+            <button class="keypad-btn" data-key="6">6</button>
+            <button class="keypad-btn" data-key="7">7</button>
+            <button class="keypad-btn" data-key="8">8</button>
+            <button class="keypad-btn" data-key="9">9</button>
+            <button class="keypad-btn keypad-action" data-key="clear">✕</button>
+            <button class="keypad-btn" data-key="0">0</button>
+            <button class="keypad-btn keypad-action" data-key="backspace">⌫</button>
+          </div>
+
+          <div class="confirm-actions">
+            <button id="btn-confirm-secret" class="btn btn-primary btn-large" disabled>
+              🔒 CONFIRM CODE
+            </button>
+          </div>
+
+          <!-- Overlay when user confirmed but opponent is still choosing -->
+          <div id="secret-locked-notice" class="locked-notice hidden">
+            <div class="locked-icon">🔒</div>
+            <div class="locked-title">YOUR CODE IS LOCKED</div>
+            <div class="locked-code" id="my-locked-code">----</div>
+            <div class="locked-subtitle">Waiting for opponent to create their code...</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================================ -->
+      <!-- 6. ACTIVE GAME SCREEN                                            -->
+      <!-- ================================================================ -->
+      <section id="screen-game" class="game-screen">
+        <div class="game-layout">
+
+          <!-- SCOREBOARD HEADER -->
+          <div class="scoreboard-bar">
+            <div class="score-player" id="score-card-p1">
+              <div class="score-role">PLAYER 1</div>
+              <div class="score-points" id="score-p1">0</div>
+              <div class="score-wins-label">WINS</div>
+            </div>
+
+            <div class="match-meta">
+              <div class="round-badge" id="match-round-label">ROUND 1 OF 3</div>
+              <div class="room-pill" id="game-room-pill" title="Click to copy room code">
+                ROOM: <span id="game-room-code">-----</span>
+              </div>
+            </div>
+
+            <div class="score-player" id="score-card-p2">
+              <div class="score-role">PLAYER 2</div>
+              <div class="score-points" id="score-p2">0</div>
+              <div class="score-wins-label">WINS</div>
+            </div>
+          </div>
+
+          <!-- TURN BANNER -->
+          <div id="turn-banner" class="turn-banner banner-your-turn">
+            <div class="turn-indicator-dot"></div>
+            <div class="turn-text-group">
+              <div class="turn-headline" id="turn-title">YOUR TURN</div>
+              <div class="turn-subheadline" id="turn-subtitle">CRACK YOUR OPPONENT'S CODE</div>
+            </div>
+          </div>
+
+          <!-- GUESS INPUT CARD -->
+          <div class="screen-card guess-card" id="guess-input-card">
+            <div class="guess-card-header">
+              <span class="guess-card-title">ENTER YOUR 4-DIGIT GUESS</span>
+              <span class="attempts-counter" id="attempts-badge">Attempt #1</span>
+            </div>
+
+            <!-- 4 Guess Digit Boxes -->
+            <div class="digit-boxes-row" id="guess-boxes-row">
+              <div class="digit-box" data-index="0" id="guess-box-0">-</div>
+              <div class="digit-box" data-index="1" id="guess-box-1">-</div>
+              <div class="digit-box" data-index="2" id="guess-box-2">-</div>
+              <div class="digit-box" data-index="3" id="guess-box-3">-</div>
+            </div>
+
+            <!-- Virtual Keypad for Guess -->
+            <div class="keypad" id="guess-keypad">
+              <button class="keypad-btn" data-key="1">1</button>
+              <button class="keypad-btn" data-key="2">2</button>
+              <button class="keypad-btn" data-key="3">3</button>
+              <button class="keypad-btn" data-key="4">4</button>
+              <button class="keypad-btn" data-key="5">5</button>
+              <button class="keypad-btn" data-key="6">6</button>
+              <button class="keypad-btn" data-key="7">7</button>
+              <button class="keypad-btn" data-key="8">8</button>
+              <button class="keypad-btn" data-key="9">9</button>
+              <button class="keypad-btn keypad-action" data-key="clear">✕</button>
+              <button class="keypad-btn" data-key="0">0</button>
+              <button class="keypad-btn keypad-action" data-key="backspace">⌫</button>
+            </div>
+
+            <div class="guess-submit-wrapper">
+              <button id="btn-submit-guess" class="btn btn-primary btn-large" disabled>
+                🔓 SUBMIT GUESS
+              </button>
+            </div>
+          </div>
+
+          <!-- GUESS HISTORY SECTION -->
+          <div class="history-card">
+            <div class="history-header">
+              <div class="history-title">GUESS HISTORY</div>
+              <div class="history-legend-mini">
+                <span>🟢 Match</span>
+                <span>🟡 Wrong Spot</span>
+                <span>❌ Miss</span>
+              </div>
+            </div>
+
+            <div id="guess-history-list" class="guess-history-list">
+              <div class="empty-history" id="empty-history-msg">
+                No guesses submitted yet. Make the first move!
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ================================================================ -->
+      <!-- 7. ROUND RESULT MODAL / OVERLAY                                  -->
+      <!-- ================================================================ -->
+      <div id="modal-round-result" class="modal-overlay hidden">
+        <div class="modal-card">
+          <div class="modal-badge">ROUND COMPLETE</div>
+          <div class="modal-icon">🎯</div>
+          <h2 class="modal-title">CODE CRACKED!</h2>
+          <div class="modal-winner" id="round-winner-text">PLAYER 1 WINS ROUND 1</div>
+
+          <div class="round-summary-grid">
+            <div class="summary-item">
+              <div class="summary-label">SECRET CODE</div>
+              <div class="summary-value secret-code-reveal" id="round-revealed-secret">7284</div>
+            </div>
+            <div class="summary-item">
+              <div class="summary-label">ATTEMPTS</div>
+              <div class="summary-value" id="round-attempts-val">5</div>
+            </div>
+          </div>
+
+          <div class="match-score-summary">
+            <div class="score-line">
+              <span id="summary-p1-label">PLAYER 1:</span>
+              <strong id="summary-p1-score">1 WINS</strong>
+            </div>
+            <div class="score-line">
+              <span id="summary-p2-label">PLAYER 2:</span>
+              <strong id="summary-p2-score">0 WINS</strong>
+            </div>
+          </div>
+
+          <div class="modal-actions">
+            <button id="btn-next-round" class="btn btn-primary btn-large">
+              PROCEED TO ROUND <span id="next-round-num">2</span> →
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================================================================ -->
+      <!-- 8. MATCH RESULT SCREEN                                           -->
+      <!-- ================================================================ -->
+      <section id="screen-match-result" class="game-screen">
+        <div class="screen-card match-result-card">
+          <div class="match-trophy">🏆</div>
+          <div class="card-eyebrow">MATCH COMPLETE</div>
+          <h1 class="match-winner-title" id="match-winner-title">PLAYER 1 WINS THE MATCH</h1>
+          <p class="card-subtitle">Best of 3 series victory!</p>
+
+          <div class="final-score-cards">
+            <div class="final-card" id="final-card-p1">
+              <div class="final-role">PLAYER 1</div>
+              <div class="final-score-num" id="final-p1-score">2</div>
+              <div class="final-score-label">ROUND WINS</div>
+            </div>
+
+            <div class="final-card" id="final-card-p2">
+              <div class="final-role">PLAYER 2</div>
+              <div class="final-score-num" id="final-p2-score">1</div>
+              <div class="final-score-label">ROUND WINS</div>
+            </div>
+          </div>
+
+          <div id="rematch-status-banner" class="rematch-banner hidden">
+            Waiting for opponent to accept rematch...
+          </div>
+
+          <div class="action-stack">
+            <button id="btn-rematch" class="btn btn-primary btn-large">
+              🔄 REMATCH
+            </button>
+            <button id="btn-match-home" class="btn btn-secondary btn-large">
+              🏠 HOME
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================================ -->
+      <!-- 9. DISCONNECTED / ERROR MODAL                                    -->
+      <!-- ================================================================ -->
+      <div id="modal-disconnect" class="modal-overlay hidden">
+        <div class="modal-card modal-warning">
+          <div class="modal-icon">⚠️</div>
+          <h2 class="modal-title" id="disconnect-title">OPPONENT DISCONNECTED</h2>
+          <p class="modal-subtitle" id="disconnect-msg">
+            Your opponent has lost connection or left the room.
+          </p>
+          <div class="modal-actions">
+            <button id="btn-disconnect-home" class="btn btn-primary btn-large">
+              RETURN TO HOME
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="/game.js"></script>
+</body>
+</html>

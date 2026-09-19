@@ -1,0 +1,6 @@
+{
+  "name": "CODE BREAKER ⚡",
+  "description": "A turn-based 1-vs-1 private room code deduction game where two players secretly choose 4 unique digits and race to crack each other's secret code.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
